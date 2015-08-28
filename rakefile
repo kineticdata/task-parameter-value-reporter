@@ -1,0 +1,61 @@
+# Ensure the required libraries are loaded
+require 'rubygems'
+begin
+  require 'rdoc/task'
+rescue LoadError
+  require 'rake/rdoctask'
+end
+#require 'spec/rake/spectask'
+
+# Set the JRuby Complete Version (used to load the correct file)
+JRUBY_COMPLETE_VERSION = "1.7.12"
+
+require 'java'
+require "vendor/jruby-complete-#{JRUBY_COMPLETE_VERSION}.jar"
+require 'vendor/kinetic-jar-builder-lib.jar'
+require 'kinetic_jar_builder'
+require 'lib/parameter_value_reporter/version'
+
+# Configure the BuildJarTask
+KineticJarBuilder::Task.new(:build) do |config|
+  # Set the jar file name
+  config.jar_name = 'parameter-value-reporter.jar'
+
+  # Set the classpath (a Rake::FileList object) for what jar files and
+  # directories should be included when compiling the config.compiled_files.
+  config.classpath = FileList[
+    "vendor/jruby-complete-#{JRUBY_COMPLETE_VERSION}.jar"
+  ]
+
+  # Set the main class
+  config.main_class = 'com.kineticdata.parametervaluereporter.Main'
+  # Main script (relative to the lib directory)
+  config.main_script = 'lib/main.rb'
+  # Set the entries that should be included in the manifest
+  config.manifest = {
+    'Implementation-Title' => 'Parameter Value Reporter',
+    'Implementation-Vendor' => 'Kinetic Data',
+    'Implementation-Version' => ParameterValueReporter::VERSION
+  }
+
+  # Set the version class
+  config.version_class = 'com.kineticdata.parametervaluereporter.Version'
+  # Set the version string
+  config.version = ParameterValueReporter::VERSION
+
+  # Specify the Rake::FileList that represents the project ruby files that
+  # should be compiled.
+  config.compiled_files = FileList[
+    'lib/**/*.rb',
+    'lib/main.rb'
+  ]
+  # Specify a Rake::FileList that represents the project files that should be
+  # included in the package without being compiled.
+  config.included_files = FileList[
+    'config/**/*',
+    'vendor/*.jar',
+  ]
+
+  # Specify whether the output should be verbose or not (defaults to false)
+  config.verbose = true
+end
